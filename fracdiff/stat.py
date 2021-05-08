@@ -1,36 +1,6 @@
-import statsmodels.tsa.stattools as stattools
-
+from fracdiff.adfuller import ad_fuller
 
 class StatTester:
-    """
-    Carry out stationarity test of time-series.
-
-    Parameters
-    ----------
-    - method : {"ADF"}, default "ADF"
-        If "ADF":
-            Augmented Dickey-Fuller unit-root test.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> np.random.seed(42)
-
-    Stationary time-series:
-    >>> x = np.random.randn(100)
-    >>> tester = StatTester(method='ADF')
-    >>> tester.pvalue(x)
-    1.1655044784188669e-17
-    >>> tester.is_stat(x)
-    True
-
-    Non-stationary time-series:
-    >>> x = np.cumsum(x)
-    >>> tester.pvalue(x)
-    0.6020814791099098
-    >>> tester.is_stat(x)
-    False
-    """
 
     def __init__(self, method="ADF"):
         self.method = method
@@ -55,7 +25,7 @@ class StatTester:
             p-value of the stationarity test.
         """
         if self.method == "ADF":
-            _, pvalue, _, _, _, _ = stattools.adfuller(x)
+            _, pvalue, _, _, _ = ad_fuller(x)
             return pvalue
 
     def is_stat(self, x, pvalue=0.05) -> bool:
