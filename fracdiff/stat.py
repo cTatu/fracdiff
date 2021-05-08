@@ -1,4 +1,4 @@
-from fracdiff.adfuller import ad_fuller
+from arch.unitroot import DFGLS
 
 class StatTester:
 
@@ -25,8 +25,7 @@ class StatTester:
             p-value of the stationarity test.
         """
         if self.method == "ADF":
-            _, pvalue, _, _, _ = ad_fuller(x)
-            return pvalue
+            return DFGLS(x, trend='ct').pvalue
 
     def is_stat(self, x, pvalue=0.05) -> bool:
         """
