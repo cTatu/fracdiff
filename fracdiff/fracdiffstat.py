@@ -1,3 +1,5 @@
+from concurrent.futures import ProcessPoolExecutor
+
 import numpy
 from sklearn.base import BaseEstimator
 from sklearn.base import TransformerMixin
@@ -20,6 +22,7 @@ class FracdiffStat(TransformerMixin, BaseEstimator):
         precision=0.01,
         upper=1.0,
         lower=0.0,
+        n_jobs=None,
     ):
         self.window = window
         self.mode = mode
@@ -29,6 +32,7 @@ class FracdiffStat(TransformerMixin, BaseEstimator):
         self.precision = precision
         self.upper = upper
         self.lower = lower
+        self.n_jobs = n_jobs
 
     def fit(self, X, y=None):
         """
@@ -50,7 +54,7 @@ class FracdiffStat(TransformerMixin, BaseEstimator):
         """
         check_array(X)
 
-        self.d_ = numpy.array([self._find_d(X[:, i]) for i in range(X.shape[1])])
+        self.d_ = self._find_features_d(X)
 
         return self
 
@@ -86,6 +90,23 @@ class FracdiffStat(TransformerMixin, BaseEstimator):
 
     def _is_stat(self, x) -> bool:
         return StatTester(method=self.stattest).is_stat(x, pvalue=self.pvalue)
+
+    def _find_features_d(self, X) -> numpy.array:
+        n_features = X.shape[1]
+        if self.n_jobs is not None and self.n_jobs != 1:
+            max_workers = self.n_jobs
+
+            # use all cpus
+            if self.n_jobs == -1:
+                max_workers = None
+
+            with ProcessPoolExecutor(max_workers=max_workers) as exec:
+                features = [X[:, i] for i in range(n_features)]
+                d_ = list(exec.map(self._find_d, features))
+        else:
+            d_ = [self._find_d(X[:, i]) for i in range(n_features)]
+
+        return numpy.array(d_)
 
     def _find_d(self, x) -> float:
         """
